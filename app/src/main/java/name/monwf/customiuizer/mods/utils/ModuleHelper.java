@@ -27,13 +27,12 @@ import java.util.Locale;
 import java.util.TimeZone;
 
 import io.github.libxposed.api.XposedModuleInterface;
+import io.github.libxposed.api.XposedInterface;
 import name.monwf.customiuizer.MainModule;
 import name.monwf.customiuizer.R;
 import name.monwf.customiuizer.mods.GlobalActions;
-import name.monwf.customiuizer.mods.utils.HookerClassHelper.CustomMethodUnhooker;
 import name.monwf.customiuizer.mods.utils.HookerClassHelper.MethodHook;
 import name.monwf.customiuizer.utils.Helpers;
-
 
 public class ModuleHelper {
     public static final String NOT_EXIST_SYMBOL = "ObjectFieldNotExist";
@@ -53,7 +52,7 @@ public class ModuleHelper {
             }
     }
 
-    public static CustomMethodUnhooker hookMethod(Method method, MethodHook callback) {
+    public static XposedInterface.HookHandle hookMethod(Method method, MethodHook callback) {
         try {
             return XposedHelpers.doHookMethod(method, callback);
         } catch (Throwable t) {
@@ -62,7 +61,7 @@ public class ModuleHelper {
         }
     }
 
-    public static CustomMethodUnhooker findAndHookMethod(String className, ClassLoader classLoader, String methodName, Object... parameterTypesAndCallback) {
+    public static XposedInterface.HookHandle findAndHookMethod(String className, ClassLoader classLoader, String methodName, Object... parameterTypesAndCallback) {
         try {
             return XposedHelpers.findAndHookMethod(className, classLoader, methodName, parameterTypesAndCallback);
         } catch (Throwable t) {
@@ -71,7 +70,7 @@ public class ModuleHelper {
         }
     }
 
-    public static CustomMethodUnhooker findAndHookMethod(Class<?> clazz, String methodName, Object... parameterTypesAndCallback) {
+    public static XposedInterface.HookHandle findAndHookMethod(Class<?> clazz, String methodName, Object... parameterTypesAndCallback) {
         try {
             return XposedHelpers.findAndHookMethod(clazz, methodName, parameterTypesAndCallback);
         } catch (Throwable t) {
@@ -100,7 +99,7 @@ public class ModuleHelper {
         }
     }
 
-    public static CustomMethodUnhooker findAndHookConstructor(String className, ClassLoader classLoader, Object... parameterTypesAndCallback) {
+    public static XposedInterface.HookHandle findAndHookConstructor(String className, ClassLoader classLoader, Object... parameterTypesAndCallback) {
         try {
             return XposedHelpers.findAndHookConstructor(className, classLoader, parameterTypesAndCallback);
         } catch (Throwable t) {
@@ -202,7 +201,7 @@ public class ModuleHelper {
         return context;
     }
 
-    public static Context findContext(XposedModuleInterface.PackageLoadedParam lpparam) {
+    public static Context findContext(XposedModuleInterface.PackageReadyParam lpparam) {
         Context context = null;
         try {
             context = (Application)XposedHelpers.callStaticMethod(XposedHelpers.findClass("android.app.ActivityThread", lpparam.getClassLoader()), "currentApplication");

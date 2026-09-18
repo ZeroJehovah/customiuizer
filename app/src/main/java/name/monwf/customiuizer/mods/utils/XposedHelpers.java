@@ -51,12 +51,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import io.github.libxposed.api.XposedInterface;
-import name.monwf.customiuizer.mods.utils.HookerClassHelper.CustomHooker;
-import name.monwf.customiuizer.mods.utils.HookerClassHelper.CustomMethodUnhooker;
-import name.monwf.customiuizer.mods.utils.HookerClassHelper.HighestPriorityHooker;
-import name.monwf.customiuizer.mods.utils.HookerClassHelper.LowestPriorityHooker;
 import name.monwf.customiuizer.mods.utils.HookerClassHelper.MethodHook;
-
 
 /**
  * Helpers that simplify hooking and calling methods/constructors, getting and settings fields, ...
@@ -334,7 +329,7 @@ public final class XposedHelpers {
      * Look up a method and hook it. See {@link #findAndHookMethod(String, ClassLoader, String, Object...)}
      * for details.
      */
-    public static CustomMethodUnhooker findAndHookMethod(Class<?> clazz, String methodName, Object... parameterTypesAndCallback) {
+    public static XposedInterface.HookHandle findAndHookMethod(Class<?> clazz, String methodName, Object... parameterTypesAndCallback) {
         if (parameterTypesAndCallback.length == 0 || !(parameterTypesAndCallback[parameterTypesAndCallback.length - 1] instanceof MethodHook))
             throw new IllegalArgumentException("no callback defined");
 
@@ -354,7 +349,7 @@ public final class XposedHelpers {
      * @throws NoSuchMethodError  In case the method was not found.
      * @throws ClassNotFoundError In case the target class or one of the parameter types couldn't be resolved.
      */
-    public static CustomMethodUnhooker findAndHookMethod(String className, ClassLoader classLoader, String methodName, Object... parameterTypesAndCallback) {
+    public static XposedInterface.HookHandle findAndHookMethod(String className, ClassLoader classLoader, String methodName, Object... parameterTypesAndCallback) {
         return findAndHookMethod(findClass(className, classLoader), methodName, parameterTypesAndCallback);
     }
 
@@ -569,8 +564,8 @@ public final class XposedHelpers {
      * @param callback  The callback to be executed when the hooked constructors are called.
      * @return A set containing one object for each found constructor which can be used to unhook it.
      */
-    public static Set<CustomMethodUnhooker> hookAllConstructors(Class<?> hookClass, MethodHook callback) {
-        Set<CustomMethodUnhooker> unhooks = new HashSet<>();
+    public static Set<XposedInterface.HookHandle> hookAllConstructors(Class<?> hookClass, MethodHook callback) {
+        Set<XposedInterface.HookHandle> unhooks = new HashSet<>();
         for (Constructor<?> constructor : hookClass.getDeclaredConstructors())
             unhooks.add(doHookConstructor(constructor, callback));
         return unhooks;
@@ -586,8 +581,8 @@ public final class XposedHelpers {
      * @param callback   The callback to be executed when the hooked methods are called.
      * @return A set containing one object for each found method which can be used to unhook it.
      */
-    public static Set<CustomMethodUnhooker> hookAllMethods(Class<?> hookClass, String methodName, MethodHook callback) {
-        Set<CustomMethodUnhooker> unhooks = new HashSet<>();
+    public static Set<XposedInterface.HookHandle> hookAllMethods(Class<?> hookClass, String methodName, MethodHook callback) {
+        Set<XposedInterface.HookHandle> unhooks = new HashSet<>();
         for (Method method : hookClass.getDeclaredMethods())
             if (method.getName().equals(methodName))
                 unhooks.add(doHookMethod(method, callback));
@@ -725,7 +720,7 @@ public final class XposedHelpers {
      * Look up a constructor and hook it. See {@link #findAndHookMethod(String, ClassLoader, String, Object...)}
      * for details.
      */
-    public static CustomMethodUnhooker findAndHookConstructor(Class<?> clazz, Object... parameterTypesAndCallback) {
+    public static XposedInterface.HookHandle findAndHookConstructor(Class<?> clazz, Object... parameterTypesAndCallback) {
         if (parameterTypesAndCallback.length == 0 || !(parameterTypesAndCallback[parameterTypesAndCallback.length - 1] instanceof MethodHook))
             throw new IllegalArgumentException("no callback defined");
 
@@ -734,68 +729,23 @@ public final class XposedHelpers {
         return doHookConstructor(m, callback);
     }
 
-    public static CustomMethodUnhooker doHookMethod(Method m, MethodHook hook) {
-        CustomMethodUnhooker unhooker;
-        boolean hooked;
-        if (hook.mPriority > XposedInterface.PRIORITY_DEFAULT) {
-            hooked = HighestPriorityHooker.memberIsRegistered(m);
-            unhooker = HighestPriorityHooker.addCallback(m, hook);
-            if (!hooked) {
-                moduleInst.hook(m, HighestPriorityHooker.class);
-            }
-        }
-        else if (hook.mPriority < XposedInterface.PRIORITY_DEFAULT) {
-            hooked = LowestPriorityHooker.memberIsRegistered(m);
-            unhooker = LowestPriorityHooker.addCallback(m, hook);
-            if (!hooked) {
-                moduleInst.hook(m, LowestPriorityHooker.class);
-            }
-        }
-        else {
-            hooked = CustomHooker.memberIsRegistered(m);
-            unhooker = CustomHooker.addCallback(m, hook);
-            if (!hooked) {
-                moduleInst.hook(m, CustomHooker.class);
-            }
-        }
-
-        return unhooker;
+    public static XposedInterface.HookHandle doHookMethod(Method m, MethodHook hook) {
+        return moduleInst.hook(m)
+            .setPriority(hook.mPriority)
+            .intercept(HookerClassHelper.newHooker(hook));
     }
 
-    private static CustomMethodUnhooker doHookConstructor(Constructor<?> m, MethodHook hook) {
-        CustomMethodUnhooker unhooker;
-        boolean hooked;
-        if (hook.mPriority > XposedInterface.PRIORITY_DEFAULT) {
-            hooked = HighestPriorityHooker.memberIsRegistered(m);
-            unhooker = HighestPriorityHooker.addCallback(m, hook);
-            if (!hooked) {
-                moduleInst.hook(m, HighestPriorityHooker.class);
-            }
-        }
-        else if (hook.mPriority < XposedInterface.PRIORITY_DEFAULT) {
-            hooked = LowestPriorityHooker.memberIsRegistered(m);
-            unhooker = LowestPriorityHooker.addCallback(m, hook);
-            if (!hooked) {
-                moduleInst.hook(m, LowestPriorityHooker.class);
-            }
-        }
-        else {
-            hooked = CustomHooker.memberIsRegistered(m);
-            unhooker = CustomHooker.addCallback(m, hook);
-            if (!hooked) {
-                moduleInst.hook(m, CustomHooker.class);
-            }
-        }
-
-        return unhooker;
+    private static XposedInterface.HookHandle doHookConstructor(Constructor<?> m, MethodHook hook) {
+        return moduleInst.hook(m)
+            .setPriority(hook.mPriority)
+            .intercept(HookerClassHelper.newHooker(hook));
     }
-
 
     /**
      * Look up a constructor and hook it. See {@link #findAndHookMethod(String, ClassLoader, String, Object...)}
      * for details.
      */
-    public static CustomMethodUnhooker findAndHookConstructor(String className, ClassLoader classLoader, Object... parameterTypesAndCallback) {
+    public static XposedInterface.HookHandle findAndHookConstructor(String className, ClassLoader classLoader, Object... parameterTypesAndCallback) {
         return findAndHookConstructor(findClass(className, classLoader), parameterTypesAndCallback);
     }
 

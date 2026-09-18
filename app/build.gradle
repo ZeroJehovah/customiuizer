@@ -27,7 +27,7 @@ android {
             v2SigningEnabled true
         }
     }
-    compileSdk 34
+    compileSdk 36
     defaultConfig {
         applicationId "name.monwf.customiuizer"
         minSdkVersion 33
@@ -69,7 +69,7 @@ android {
     androidResources {
         noCompress 'zip'
     }
-    buildToolsVersion '34.0.0'
+    buildToolsVersion '36.0.0'
 //    gradle.projectsEvaluated {
 //        tasks.withType(JavaCompile) {
 //            options.compilerArgs << "-Xlint:unchecked" << "-Xlint:deprecation"
@@ -84,11 +84,11 @@ android {
 dependencies {
     //    implementation "ch.acra:acra-core:$acraVersion"
 //    noinspection DifferentStdlibGradleVersion
-    compileOnly files('lib/api-100.aar')
     compileOnly files('lib/miuisystem.jar')
     compileOnly files('lib/framework.jar')
 
-    implementation "io.github.libxposed:service:100-1.0.0"
+    compileOnly "io.github.libxposed:api:101.0.1"
+    implementation "io.github.libxposed:service:101.0.0"
     implementation "org.apache.commons:commons-lang3:3.13.0"
     implementation "androidx.preference:preference:1.2.1"
     implementation 'androidx.palette:palette:1.0.0'

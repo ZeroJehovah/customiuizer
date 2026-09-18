@@ -7,7 +7,7 @@ import android.util.SparseIntArray;
 
 import java.util.concurrent.ConcurrentHashMap;
 
-import io.github.libxposed.api.XposedInterface.BeforeHookCallback;
+import name.monwf.customiuizer.mods.utils.HookerClassHelper.MethodHookParam;
 import name.monwf.customiuizer.mods.utils.HookerClassHelper.MethodHook;
 
 public class ResourceHooks {
@@ -29,7 +29,7 @@ public class ResourceHooks {
 	@SuppressWarnings("FieldCanBeLocal")
 	private final MethodHook mReplaceHook = new MethodHook() {
 		@Override
-		protected void before(final BeforeHookCallback param) {
+		protected void before(final MethodHookParam param) {
 			Context mContext = ModuleHelper.findContext();
 			if (mContext == null) return;
 			String method = param.getMember().getName();
